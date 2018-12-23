@@ -30,13 +30,17 @@ class Controller:
         # create a new log entry
         log = model.TaskLog()
         log.project = self.v.get_project()
-        log.task = self.v.get_task()
 
-        log.start_time = self.v.wait_for_start()
-        log.stop_time = self.v.wait_for_stop(log.start_time)
-        log.comment = self.v.get_comments()
+        while True:
+            log.task = self.v.get_task()
 
-        self.m.save_log(log)
+            log.start_time = self.v.wait_for_start()
+            log.stop_time = self.v.wait_for_stop(log.start_time)
+            log.comment = self.v.get_comments()
+            self.m.save_log(log)
+
+            if self.v.confirm_exit():
+                break
 
     def mode_2(self):
         # view logs

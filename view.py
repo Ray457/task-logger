@@ -60,7 +60,16 @@ class ViewCMDLine:
         :return:
         The comment string
         """
-        return input('Any comments?')
+        return input('Any comments? ')
+
+    @staticmethod
+    def confirm_exit():
+        res = ViewCMDLine.get_input('Exit? Answer n to create more records. y/n ', ['y', 'n'])
+        if res == 'y':
+            return True
+        else:
+            print()
+            return False
 
     @staticmethod
     def get_input(prompt, expecting, default=None):
