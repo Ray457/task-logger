@@ -9,7 +9,7 @@ class Controller:
     v = None  # view object
 
     def main(self):
-        args = self.init()
+        args = self.get_args()
 
         if args.gui_mode:
             self.v = view.ViewQt()
@@ -17,6 +17,7 @@ class Controller:
             self.v = view.ViewCMDLine()
 
         self.m = model.ModelSQLite()
+        # set up the model. A filename can be passed in for potential user-specified file name in the future
         self.m.connect()
         mode = self.v.get_mode()
         if mode == '1':
@@ -50,7 +51,7 @@ class Controller:
         # modify logs
         pass
 
-    def init(self):  # set up argparse
+    def get_args(self):  # set up argparse
         parser = argparse.ArgumentParser(description='A simple utility that logs tasks.')
         parser.add_argument('-g', dest='gui_mode', action='store_const',
                             const=True, default=False,

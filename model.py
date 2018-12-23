@@ -16,7 +16,7 @@ class ModelSQLite:
         res = self.cur.fetchone()
         if res is None:  # no table in the database, create one
             self.cur.execute("CREATE TABLE logs\
-                             (startTIme INTEGER, task TEXT, project TEXT, stopTime INTEGER, comment TEXT)")
+                             (startTime INTEGER, task TEXT, project TEXT, stopTime INTEGER, comment TEXT)")
             self.conn.commit()
 
     def save_log(self, log):

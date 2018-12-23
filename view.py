@@ -64,6 +64,10 @@ class ViewCMDLine:
 
     @staticmethod
     def confirm_exit():
+        """
+        Ask for confirmation to exit
+        :return: True if confirmed to exit
+        """
         res = ViewCMDLine.get_input('Exit? Answer n to create more records. y/n ', ['y', 'n'])
         if res == 'y':
             return True
@@ -73,6 +77,13 @@ class ViewCMDLine:
 
     @staticmethod
     def get_input(prompt, expecting, default=None):
+        """
+        Gets input from user at command line. Will not return until expected answer(s) are given
+        :param prompt: Prompt text to be displayed
+        :param expecting: list of expected inputs, as strings
+        :param default: If the expected inputs contain ''(no input), this value will be used when user provide no input
+        :return: the input from user
+        """
         while True:
             if default is None:
                 got = input(prompt)
@@ -80,7 +91,7 @@ class ViewCMDLine:
                 got = input("{} [{}] ".format(prompt, default))
             if got in expecting:
                 break
-        if ('' in expecting) and (default is not None) and (got == ''):
+        if ('' in expecting) and (got == ''):
             got = default
         return got
 
