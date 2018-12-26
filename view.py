@@ -1,7 +1,19 @@
 from PyQt5.QtWidgets import QApplication
-import model
 import time
-from datetime import datetime
+import datetime
+from collections import OrderedDict
+
+
+def format_time(log):
+    """
+    Format the times in a log entry into a list of strings to print
+    :param log: a TaskLog object
+    :return: a list of strings representing start time, stop time and time taken
+    """
+    return [str(datetime.datetime.fromtimestamp(log.start_time)),
+            str(datetime.datetime.fromtimestamp(log.stop_time)),
+            str(datetime.datetime.fromtimestamp(log.stop_time)
+                - datetime.datetime.fromtimestamp(log.start_time))]
 
 
 class ViewCMDLine:
@@ -25,10 +37,6 @@ class ViewCMDLine:
         return ViewCMDLine.get_input('Mode=? (1:Create new logs, 2:View logs)', ['1', '2', ''], '1')
 
     @staticmethod
-    def show_stats(stats):
-        pass
-
-    @staticmethod
     def wait_for_start():
         """
         Waits for user confirmation to start timing.
@@ -36,8 +44,8 @@ class ViewCMDLine:
         The start time in epoch time
         """
         ViewCMDLine.get_input('Ready to start? y/n ', ['y', 'Y'])
-        start_time = time.time()
-        print('Starting at: ' + str(datetime.fromtimestamp(start_time))[:-7] + '\n')
+        start_time = int(time.time())
+        print('Starting at: ' + str(datetime.datetime.fromtimestamp(start_time)) + '\n')
         return start_time
 
     @staticmethod
@@ -48,9 +56,10 @@ class ViewCMDLine:
         The stop time in epoch time
         """
         ViewCMDLine.get_input('Stop? y/n ', ['y', 'Y'])
-        stop_time = time.time()
-        print('Stopped at: ' + str(datetime.fromtimestamp(stop_time))[:-7])
-        print('Time taken: ' + str(datetime.fromtimestamp(stop_time) - datetime.fromtimestamp(start_time))[:-7])
+        stop_time = int(time.time())
+        print('Stopped at: ' + str(datetime.datetime.fromtimestamp(stop_time)))
+        print('Time taken: '
+              + str(datetime.datetime.fromtimestamp(stop_time) - datetime.datetime.fromtimestamp(start_time)))
         return stop_time
 
     @staticmethod
@@ -94,6 +103,54 @@ class ViewCMDLine:
         if ('' in expecting) and (got == ''):
             got = default
         return got
+
+    @staticmethod
+    def show_today(logs):
+        """
+        Shows today's log entries, first sort by time then by projects and tasks
+        :param logs: list of TaskLog objects, each represent a log entry
+        :return: None
+        """
+        print()
+        print("Today's records:")
+        print("=" * 54)
+
+        for log in logs:
+            time_formatted = format_time(log)
+            print("[{}]-[{}]: {} to {}, time taken: {}".format(
+                log.project,
+                log.task,
+                time_formatted[0],
+                time_formatted[1],
+                time_formatted[2]))
+
+        print()
+        print("Sorted by projects and tasks:")
+        print("=" * 54)
+        # a dictionary holding the logs which are keyed using the projects they're belonging to
+        logs_by_projects = OrderedDict()
+        for log in logs:  # sort by project
+            if log.project not in logs_by_projects:
+                logs_by_projects[log.project] = [log]
+                # so we have a list of sorted projects sorted by when it was inserted to the database
+            else:
+                logs_by_projects[log.project].append(log)
+        for project in logs_by_projects:  # sort by task and print
+            print("Project: " + project)
+            logs_by_tasks = OrderedDict()
+            for log in logs_by_projects[project]:
+                if log.task not in logs_by_tasks:
+                    logs_by_tasks[log.task] = [log]
+                else:
+                    logs_by_tasks[log.task].append(log)
+            for task in logs_by_tasks:
+                for log in logs_by_tasks[task]:
+                    time_formatted = format_time(log)
+                    print("\tTask: " + task)
+                    print("\tTime: {} to {}".format(time_formatted[0], time_formatted[1]))
+                    print("\tTime taken: " + time_formatted[2])
+                    print()
+            print("-" * 54)
 
 
 class ViewQt:

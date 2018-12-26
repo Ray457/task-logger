@@ -45,7 +45,8 @@ class Controller:
 
     def mode_2(self):
         # view logs
-        pass
+        logs = self.m.load_today()
+        self.v.show_today(logs)
 
     def mode_3(self):
         # modify logs

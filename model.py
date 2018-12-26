@@ -1,4 +1,5 @@
 import sqlite3
+import datetime
 
 
 class ModelSQLite:
@@ -29,8 +30,29 @@ class ModelSQLite:
                          (log.start_time, log.task, log.project, log.stop_time, log.comment))
         self.conn.commit()
 
-    def load_today(self, search):
-        pass
+    def load_today(self):
+        """
+        Returns all records saved today
+        :return: list of TaskLog objects
+        """
+        date_today = datetime.date.today()
+        start_timestamp_today = int(datetime.datetime(date_today.year,
+                                                      date_today.month,
+                                                      date_today.day,
+                                                      0, 0).timestamp())
+        date_tmrw = date_today + datetime.timedelta(days=1)
+        end_timestamp_today = int(datetime.datetime(date_tmrw.year,
+                                                    date_tmrw.month,
+                                                    date_tmrw.day,
+                                                    0, 0).timestamp())
+        self.cur.execute("SELECT * FROM logs WHERE (startTime BETWEEN ? AND ?)",
+                         (start_timestamp_today, end_timestamp_today))
+        logs = self.cur.fetchall()
+        out = []
+        for log in logs:
+            out.append(TaskLog(log[0], log[1], log[2], log[3], log[4]))
+
+        return out
 
 
 class ModelXLS:
@@ -52,7 +74,14 @@ class TaskLog:
     Object representing a log entry
     """
     start_time = 0
-    stop_time = 0
     task = ''
     project = ''
+    stop_time = 0
     comment = ''
+
+    def __init__(self, start_time=0, task='', project='', stop_time=0, comment=''):
+        self.start_time = start_time
+        self.stop_time = stop_time
+        self.task = task
+        self.project = project
+        self.comment = comment
