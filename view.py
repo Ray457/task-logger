@@ -16,6 +16,18 @@ def format_time(log):
                 - datetime.datetime.fromtimestamp(log.start_time))]
 
 
+def calc_time(logs):
+    """
+    Calculate the time difference and sum them up
+    :param logs: a list of TaskLog objects
+    :return: total time difference in seconds
+    """
+    sum_time = 0
+    for log in logs:
+        sum_time += (log.stop_time - log.start_time)
+    return sum_time
+
+
 class ViewCMDLine:
     @staticmethod
     def __init__():
@@ -117,12 +129,13 @@ class ViewCMDLine:
 
         for log in logs:
             time_formatted = format_time(log)
-            print("[{}]-[{}]: {} to {}, time taken: {}".format(
+            print("[{}]-[{}]: {} to {}, time taken: {}. Comments: {}".format(
                 log.project,
                 log.task,
                 time_formatted[0],
                 time_formatted[1],
-                time_formatted[2]))
+                time_formatted[2],
+                log.comment))
 
         print()
         print("Sorted by projects and tasks:")
@@ -132,7 +145,6 @@ class ViewCMDLine:
         for log in logs:  # sort by project
             if log.project not in logs_by_projects:
                 logs_by_projects[log.project] = [log]
-                # so we have a list of sorted projects sorted by when it was inserted to the database
             else:
                 logs_by_projects[log.project].append(log)
         for project in logs_by_projects:  # sort by task and print
@@ -149,8 +161,19 @@ class ViewCMDLine:
                     print("\tTask: " + task)
                     print("\tTime: {} to {}".format(time_formatted[0], time_formatted[1]))
                     print("\tTime taken: " + time_formatted[2])
+                    print("\tComments: " + log.comment)
                     print()
+                print("\tTotal time for this task: " + str(datetime.timedelta(seconds=calc_time(logs_by_tasks[task]))))
+                print()
+            print("Total time for this project: "
+                  + str(datetime.timedelta(seconds=calc_time(logs_by_projects[project]))))
             print("-" * 54)
+
+        time_today = calc_time(logs)
+        print("Total logged time today: " + str(datetime.timedelta(seconds=time_today)))
+        print("Out of 24 hours, this is {:.2f}%. Out of 18 hours, this is {:.2f}%".format(
+            time_today / 864, time_today / 648))
+        print()
 
 
 class ViewQt:
