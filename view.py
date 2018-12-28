@@ -3,6 +3,11 @@ import time
 import datetime
 from collections import OrderedDict
 import re
+import threading
+import queue
+
+
+q = queue.Queue()  # flag to stop printing elapsed time. Contains True or False
 
 
 def format_time(log):
@@ -39,9 +44,19 @@ def parse_datetime(datetime_str):
     date_fmt_str = "%Y-%m-%d"
     date_match_str = "\d\d\d\d-\d\d-\d\d"
     time_match_str = "\d\d:\d\d:\d\d"
+    time_match_str_s = "\d\d:\d\d"  # s for short
     datetime_match_str = date_match_str + ' ' + time_match_str
 
-    if re.match(time_match_str, datetime_str):  # time only, using today as the date
+    if re.match(time_match_str_s, datetime_str):
+        # time only (in hours and minutes), using today as the date and 0 for the second
+        today_date = datetime.date.today()
+        times = datetime_str.split(':')
+        return datetime.datetime(year=today_date.year,
+                                 month=today_date.month,
+                                 day=today_date.day,
+                                 hour=int(times[0]),
+                                 minute=int(times[1]))
+    elif re.match(time_match_str, datetime_str):  # time only, using today as the date
         today_date = datetime.date.today()
         times = datetime_str.split(':')
         return datetime.datetime(year=today_date.year,
@@ -59,6 +74,27 @@ def parse_datetime(datetime_str):
 
     else:
         raise ValueError("No recognizable pattern found!")
+
+
+def show_elapsed_time(start_timestamp):
+    """
+    The thread function for printing the current elapsed time
+    :param start_timestamp: A datetime.datetime object representing the starting time
+    :return: None
+    """
+    start_time = datetime.datetime.fromtimestamp(start_timestamp)
+    time.sleep(1)  # so the next print statement doesn't race with the waiting for stop prompt
+    print()
+    while True:
+        try:
+            stop = q.get(False)
+            if stop:
+                break
+        except queue.Empty:
+            pass
+        current_time = datetime.datetime.now()
+        print("Elapsed time: " + str(current_time - start_time)[:-7], end='\r')
+        time.sleep(1)
 
 
 class ViewCMDLine:
@@ -96,11 +132,17 @@ class ViewCMDLine:
     @staticmethod
     def wait_for_stop(start_time):
         """
-        Waits for user confirmation to stop timing.
+        Waits for user confirmation to stop timing. Also prints elapsed time while waiting for stop
         :return:
         The stop time in epoch time
         """
+        t = threading.Thread(target=show_elapsed_time, args=(start_time,))
+        t.start()
+
         ViewCMDLine.get_input('Stop? y/n ', ['y', 'Y'])
+
+        q.put(True)  # tell the thread printing elapsed time to stop
+
         stop_time = int(time.time())
         print('Stopped at: ' + str(datetime.datetime.fromtimestamp(stop_time)))
         print('Time taken: '
@@ -182,7 +224,7 @@ class ViewCMDLine:
 
         begin_datetime = parse_datetime(begin_datetime_raw)
         end_datetime = parse_datetime(end_datetime_raw)
-        
+
         return begin_datetime, end_datetime
 
     @staticmethod
