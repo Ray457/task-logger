@@ -117,63 +117,85 @@ class ViewCMDLine:
         return got
 
     @staticmethod
-    def show_today(logs):
+    def get_view_range():
         """
-        Shows today's log entries, first sort by time then by projects and tasks
+        Gets the view range (list today, list last week) from user
+        :return: 1 for today, 2 for showing last 7 days
+        """
+        return int(ViewCMDLine.get_input("View range? (1: list today, 2: list last 7 days)", ['', '1', '2'], '1'))
+
+    @staticmethod
+    def get_show_detail():
+        """
+        Gets the user preference about how detailed the output should be
+        :return: True for list and stats, False for list only
+        """
+        if ViewCMDLine.get_input("Show details? (y: list and show stats, n: list only)", ['', 'y', 'n'], 'y') == 'y':
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def show_stats(logs, group_output=False):
+        """
+        Shows last 7 days' log entries, first sort by time then by projects and tasks
         :param logs: list of TaskLog objects, each represent a log entry
+        :param group_output: if True groups the output by projects and tasks
         :return: None
         """
         print()
-        print("Today's records:")
-        print("=" * 54)
-
-        for log in logs:
-            time_formatted = format_time(log)
-            print("[{}]-[{}]: {} to {}, time taken: {}. Comments: {}".format(
-                log.project,
-                log.task,
-                time_formatted[0],
-                time_formatted[1],
-                time_formatted[2],
-                log.comment))
-
-        print()
-        print("Sorted by projects and tasks:")
-        print("=" * 54)
-        # a dictionary holding the logs which are keyed using the projects they're belonging to
-        logs_by_projects = OrderedDict()
-        for log in logs:  # sort by project
-            if log.project not in logs_by_projects:
-                logs_by_projects[log.project] = [log]
-            else:
-                logs_by_projects[log.project].append(log)
-        for project in logs_by_projects:  # sort by task and print
-            print("Project: " + project)
-            logs_by_tasks = OrderedDict()
-            for log in logs_by_projects[project]:
-                if log.task not in logs_by_tasks:
-                    logs_by_tasks[log.task] = [log]
+        if group_output:
+            print("Sorted by projects and tasks:")
+            print("=" * 54)
+            # a dictionary holding the logs which are keyed using the projects they're belonging to
+            logs_by_projects = OrderedDict()
+            for log in logs:  # sort by project
+                if log.project not in logs_by_projects:
+                    logs_by_projects[log.project] = [log]
                 else:
-                    logs_by_tasks[log.task].append(log)
-            for task in logs_by_tasks:
-                for log in logs_by_tasks[task]:
-                    time_formatted = format_time(log)
-                    print("\tTask: " + task)
-                    print("\tTime: {} to {}".format(time_formatted[0], time_formatted[1]))
-                    print("\tTime taken: " + time_formatted[2])
-                    print("\tComments: " + log.comment)
+                    logs_by_projects[log.project].append(log)
+            for project in logs_by_projects:  # sort by task and print
+                print("Project: " + project)
+                logs_by_tasks = OrderedDict()
+                for log in logs_by_projects[project]:
+                    if log.task not in logs_by_tasks:
+                        logs_by_tasks[log.task] = [log]
+                    else:
+                        logs_by_tasks[log.task].append(log)
+                for task in logs_by_tasks:
+                    for log in logs_by_tasks[task]:
+                        time_formatted = format_time(log)
+                        print("\tTask: " + task)
+                        print("\tTime: {} to {}".format(time_formatted[0], time_formatted[1]))
+                        print("\tTime taken: " + time_formatted[2])
+                        print("\tComments: " + log.comment)
+                        print()
+                    print("\tTotal time for this task: " + str(
+                        datetime.timedelta(seconds=calc_time(logs_by_tasks[task]))))
                     print()
-                print("\tTotal time for this task: " + str(datetime.timedelta(seconds=calc_time(logs_by_tasks[task]))))
-                print()
-            print("Total time for this project: "
-                  + str(datetime.timedelta(seconds=calc_time(logs_by_projects[project]))))
-            print("-" * 54)
+                print("Total time for this project: "
+                      + str(datetime.timedelta(seconds=calc_time(logs_by_projects[project]))))
+                print("-" * 54)
 
-        time_today = calc_time(logs)
-        print("Total logged time today: " + str(datetime.timedelta(seconds=time_today)))
-        print("Out of 24 hours, this is {:.2f}%. Out of 18 hours, this is {:.2f}%".format(
-            time_today / 864, time_today / 648))
-        print()
+            time_today = calc_time(logs)
+            print("Total logged time: " + str(datetime.timedelta(seconds=time_today)))
+            print("Out of 24 hours, this is {:.2f}%. Out of 18 hours, this is {:.2f}%".format(
+                time_today / 864, time_today / 648))
+            print()
+
+        else:
+            print("Today's records:")
+            print("=" * 54)
+
+            for log in logs:
+                time_formatted = format_time(log)
+                print("[{}]-[{}]: {} to {}, time taken: {}. Comments: {}".format(
+                    log.project,
+                    log.task,
+                    time_formatted[0],
+                    time_formatted[1],
+                    time_formatted[2],
+                    log.comment))
 
 
 class ViewQt:

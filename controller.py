@@ -1,7 +1,7 @@
 import view
 import model
 import argparse
-import time
+import datetime
 
 
 class Controller:
@@ -27,6 +27,8 @@ class Controller:
         elif mode == '3':
             self.mode_3()
 
+        self.m.cleanup()
+
     def mode_1(self):
         # create a new log entry
         log = model.TaskLog()
@@ -45,8 +47,20 @@ class Controller:
 
     def mode_2(self):
         # view logs
-        logs = self.m.load_today()
-        self.v.show_today(logs)
+        end_date = datetime.date.today() + datetime.timedelta(days=1)
+
+        view_range = self.v.get_view_range()
+        view_detail = self.v.get_show_detail()
+        if view_range == 1:  # list today
+            begin_date = datetime.date.today()
+        elif view_range == 2:  # list last 7 days
+            begin_date = datetime.date.today() - datetime.timedelta(days=6)
+        else:
+            begin_date = datetime.date.today()  # default
+        logs = self.m.load_range(begin_date, end_date)
+        self.v.show_stats(logs)
+        if view_detail:
+            self.v.show_stats(logs, True)
 
     def mode_3(self):
         # modify logs
