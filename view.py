@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QApplication
 import time
 import datetime
 from collections import OrderedDict
+import re
 
 
 def format_time(log):
@@ -26,6 +27,38 @@ def calc_time(logs):
     for log in logs:
         sum_time += (log.stop_time - log.start_time)
     return sum_time
+
+
+def parse_datetime(datetime_str):
+    """
+    Parses a string representing date and/or time into datetime.datetime objects
+    :param datetime_str: a string with the format yyyy-mm-dd hh:mm:ss
+    :return: a datetime.datetime object the string corresponds to
+    """
+    datetime_fmt_str = "%Y-%m-%d %H:%M:%S"
+    date_fmt_str = "%Y-%m-%d"
+    date_match_str = "\d\d\d\d-\d\d-\d\d"
+    time_match_str = "\d\d:\d\d:\d\d"
+    datetime_match_str = date_match_str + ' ' + time_match_str
+
+    if re.match(time_match_str, datetime_str):  # time only, using today as the date
+        today_date = datetime.date.today()
+        times = datetime_str.split(':')
+        return datetime.datetime(year=today_date.year,
+                                 month=today_date.month,
+                                 day=today_date.day,
+                                 hour=int(times[0]),
+                                 minute=int(times[1]),
+                                 second=int(times[2]))
+
+    elif re.match(date_match_str, datetime_str):  # date only, using 00:00:00 as the time
+        return datetime.datetime.strptime(datetime_str, date_fmt_str)
+
+    elif re.match(datetime_match_str, datetime_str):  # both date and time are typed in
+        return datetime.datetime.strptime(datetime_str, datetime_fmt_str)
+
+    else:
+        raise ValueError("No recognizable pattern found!")
 
 
 class ViewCMDLine:
@@ -120,9 +153,37 @@ class ViewCMDLine:
     def get_view_range():
         """
         Gets the view range (list today, list last week) from user
-        :return: 1 for today, 2 for showing last 7 days
+        :return: 2 datetime.datetime or datetime.date objects
         """
-        return int(ViewCMDLine.get_input("View range? (1: list today, 2: list last 7 days)", ['', '1', '2'], '1'))
+        selection = int(ViewCMDLine.get_input("View range? (1: list today, 2: list last 7 days, 3: specify)",
+                                              ['', '1', '2', '3'],
+                                              '1'))
+        if selection == 1:
+            return (datetime.date.today(),
+                    datetime.date.today() + datetime.timedelta(days=1))
+        elif selection == 2:
+            return (datetime.date.today() - datetime.timedelta(days=6),
+                    datetime.date.today() + datetime.timedelta(days=1))
+        elif selection == 3:
+            return ViewCMDLine.get_specified_range()
+        else:
+            return (datetime.date.today(),  # default to "list today"
+                    datetime.date.today() + datetime.timedelta(days=1))
+
+    @staticmethod
+    def get_specified_range():
+        """
+        Gets a datetime range specified by user
+        :return: 2 datetime.datetime or datetime.date objects
+        """
+        print("Type in date and/or time in this format: yyyy-mm-dd hh:mm:ss. Use 24-hour clock")
+        begin_datetime_raw = input("Begin time: ")
+        end_datetime_raw = input("End time: ")
+
+        begin_datetime = parse_datetime(begin_datetime_raw)
+        end_datetime = parse_datetime(end_datetime_raw)
+        
+        return begin_datetime, end_datetime
 
     @staticmethod
     def get_show_detail():

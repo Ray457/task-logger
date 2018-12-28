@@ -30,38 +30,37 @@ class ModelSQLite:
                          (log.start_time, log.task, log.project, log.stop_time, log.comment))
         self.conn.commit()
 
-    def load_range(self, begin_datetime, end_datetime):
+    def load_range(self, datetime_range):
         """
         Returns all records within the specified range
-        :param begin_datetime: A datetime.datetime or datetime.date object
-        :param end_datetime: A datetime.datetime or datetime.date object
+        :param datetime_range: Two datetime.datetime or datetime.date objects specifying the range
         :return: list of TaskLog objects
         """
-        if type(begin_datetime) is datetime.datetime:
-            begin_timestamp = int(datetime.datetime(begin_datetime.year,
-                                                    begin_datetime.month,
-                                                    begin_datetime.day,
-                                                    begin_datetime.hour,
-                                                    begin_datetime.minute,
-                                                    begin_datetime.second).timestamp())
-        elif type(begin_datetime) is datetime.date:
-            begin_timestamp = int(datetime.datetime(begin_datetime.year,
-                                                    begin_datetime.month,
-                                                    begin_datetime.day).timestamp())
+        if type(datetime_range[0]) is datetime.datetime:  # begin
+            begin_timestamp = int(datetime.datetime(datetime_range[0].year,
+                                                    datetime_range[0].month,
+                                                    datetime_range[0].day,
+                                                    datetime_range[0].hour,
+                                                    datetime_range[0].minute,
+                                                    datetime_range[0].second).timestamp())
+        elif type(datetime_range[0]) is datetime.date:
+            begin_timestamp = int(datetime.datetime(datetime_range[0].year,
+                                                    datetime_range[0].month,
+                                                    datetime_range[0].day).timestamp())
         else:
             raise TypeError("Argument begin_datetime must be either a datetime.datetime or datetime.date object")
 
-        if type(end_datetime) is datetime.datetime:
-            end_timestamp = int(datetime.datetime(end_datetime.year,
-                                                  end_datetime.month,
-                                                  end_datetime.day,
-                                                  end_datetime.hour,
-                                                  end_datetime.minute,
-                                                  end_datetime.second).timestamp())
-        elif type(end_datetime) is datetime.date:
-            end_timestamp = int(datetime.datetime(end_datetime.year,
-                                                  end_datetime.month,
-                                                  end_datetime.day).timestamp())
+        if type(datetime_range[1]) is datetime.datetime:
+            end_timestamp = int(datetime.datetime(datetime_range[1].year,
+                                                  datetime_range[1].month,
+                                                  datetime_range[1].day,
+                                                  datetime_range[1].hour,
+                                                  datetime_range[1].minute,
+                                                  datetime_range[1].second).timestamp())
+        elif type(datetime_range[1]) is datetime.date:
+            end_timestamp = int(datetime.datetime(datetime_range[1].year,
+                                                  datetime_range[1].month,
+                                                  datetime_range[1].day).timestamp())
         else:
             raise TypeError("Argument begin_datetime must be either a datetime.datetime or datetime.date object")
 

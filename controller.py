@@ -51,13 +51,7 @@ class Controller:
 
         view_range = self.v.get_view_range()
         view_detail = self.v.get_show_detail()
-        if view_range == 1:  # list today
-            begin_date = datetime.date.today()
-        elif view_range == 2:  # list last 7 days
-            begin_date = datetime.date.today() - datetime.timedelta(days=6)
-        else:
-            begin_date = datetime.date.today()  # default
-        logs = self.m.load_range(begin_date, end_date)
+        logs = self.m.load_range(view_range)
         self.v.show_stats(logs)
         if view_detail:
             self.v.show_stats(logs, True)
